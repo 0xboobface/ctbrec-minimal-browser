@@ -5,6 +5,7 @@ const {app, BrowserWindow, session} = require('electron')
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let remoteControlSocket
+let proxySettings
 
 function startBrowser () {
   let net = require('net');
@@ -30,7 +31,17 @@ function startBrowser () {
           let w = args.w != undefined ? args.w : 1024;
           let h = args.h != undefined ? args.h : 768;
           mainWindow.setSize(w, h);
-          mainWindow.loadURL(args.url)
+          remoteControlSocket.write(JSON.stringify(args.proxy) + '\n');
+          if(args.proxy != undefined) {
+            proxySettings = args.proxy;
+            let proxyConfig = {'proxyRules': args.proxy.address};
+            mainWindow.webContents.session.setProxy(proxyConfig, () => {
+              remoteControlSocket.write('Proxy settings configured\n');
+              mainWindow.loadURL(args.url);
+            });
+          } else {
+            mainWindow.loadURL(args.url);
+          }
         } else if(msg.execute) {
           if(msg.execute === 'quit') {
             socket.end();
@@ -45,8 +56,8 @@ function startBrowser () {
     })
   }).listen(3202);
 
-  mainWindow = new BrowserWindow({ 
-    width: 1024, 
+  mainWindow = new BrowserWindow({
+    width: 1024,
     height: 768,
     icon: app.getAppPath() + '/icon.png'
   })
@@ -65,11 +76,18 @@ function startBrowser () {
     })
   })
 }
-  
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', startBrowser)
+
+app.on('login', function(event, webContents, request, authInfo, callback) {
+  if(authInfo.isProxy) {
+    console.log('Authentication requested by proxy');
+    callback(proxySettings.user, proxySettings.password);
+  }
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
