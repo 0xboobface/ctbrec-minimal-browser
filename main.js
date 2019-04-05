@@ -6,12 +6,13 @@ const {app, BrowserWindow, session} = require('electron')
 let mainWindow
 let remoteControlSocket
 let proxySettings
+var stopped = false;
 
 function startBrowser () {
   let net = require('net');
   let server = net.createServer(function(socket) { //'connection' listener
     remoteControlSocket = socket;
-    var backlog = ''
+    var backlog = '';
     socket.on('data', function (data) {
       backlog += data
       var n = backlog.indexOf('\n')
@@ -31,7 +32,6 @@ function startBrowser () {
           let w = args.w != undefined ? args.w : 1024;
           let h = args.h != undefined ? args.h : 768;
           mainWindow.setSize(w, h);
-          remoteControlSocket.write(JSON.stringify(args.proxy) + '\n');
           if(args.proxy != undefined) {
             proxySettings = args.proxy;
             let proxyConfig = {'proxyRules': args.proxy.address};
@@ -44,6 +44,7 @@ function startBrowser () {
           }
         } else if(msg.execute) {
           if(msg.execute === 'quit') {
+            stopped = true;
             socket.end();
             app.quit()
           } else {
@@ -71,10 +72,13 @@ function startBrowser () {
         'url': mainWindow.webContents.getURL(),
         'cookies': cookies
       }
-      remoteControlSocket.write(JSON.stringify(event))
-      remoteControlSocket.write('\n')
+      if(!remoteControlSocket.destroyed && !stopped) {
+        remoteControlSocket.write(JSON.stringify(event))
+        remoteControlSocket.write('\n')
+      }
     })
   })
+  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
@@ -84,7 +88,7 @@ app.on('ready', startBrowser)
 
 app.on('login', function(event, webContents, request, authInfo, callback) {
   if(authInfo.isProxy) {
-    console.log('Authentication requested by proxy');
+    remoteControlSocket.write('Authentication requested by proxy\n');
     callback(proxySettings.user, proxySettings.password);
   }
 })
@@ -105,6 +109,3 @@ app.on('activate', function () {
     startBrowser()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
