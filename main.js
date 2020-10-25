@@ -68,20 +68,22 @@ function startBrowser () {
     mainWindow = null
   });
   mainWindow.webContents.on('did-frame-finish-load', () => {
-    mainWindow.openDevTools();
-    session.defaultSession.cookies.get({}, (error, cookies) => {
-      let event = {
-        'url': mainWindow.webContents.getURL(),
-        'cookies': cookies
-      }
-      process.stdout.write('trying to send message to ctbrec' + event);
-      if(!remoteControlSocket.destroyed && !stopped) {
-        remoteControlSocket.write(JSON.stringify(event))
-        remoteControlSocket.write('\n')
-      } else {
-        console.log('socket not ready');
-      }
-    })
+    //mainWindow.openDevTools();
+    session.defaultSession.cookies.get({})
+      .then((cookies) => {
+        let event = {
+          'url': mainWindow.webContents.getURL(),
+          'cookies': cookies
+        }
+        if(!remoteControlSocket.destroyed && !stopped) {
+          remoteControlSocket.write(JSON.stringify(event))
+          remoteControlSocket.write('\n')
+        } else {
+          console.log("########### socket not ready");
+        }
+      }).catch((error) => {
+        console.log(error)
+      })
   })
 }
 
@@ -110,6 +112,6 @@ app.on('activate', function () {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    startBrowser()
+    startBrowser();
   }
 })
