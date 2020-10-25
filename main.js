@@ -61,12 +61,14 @@ function startBrowser () {
     width: 1024,
     height: 768,
     icon: app.getAppPath() + '/icon.png'
-  })
-  mainWindow.setMenu(null)
+  });
+  mainWindow.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:82.0) Gecko/20100101 Firefox/82.0');
+  mainWindow.setMenu(null);
   mainWindow.on('closed', () => {
     mainWindow = null
-  })
+  });
   mainWindow.webContents.on('did-frame-finish-load', () => {
+    //mainWindow.openDevTools();
     session.defaultSession.cookies.get({}, (error, cookies) => {
       let event = {
         'url': mainWindow.webContents.getURL(),
@@ -78,7 +80,6 @@ function startBrowser () {
       }
     })
   })
-  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished

@@ -1,15 +1,15 @@
 {
   "name": "ctbrec-minimal-browser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron --enable-logging ."
   },
   "repository": "https://github.com/0xboobface/ctbrec-minimal-browser",
   "author": "0xb00bface",
   "license": "GPL 3",
   "devDependencies": {
-    "electron": "^3.0.7",
-    "electron-packager": "^13.0.1"
+    "electron": "^10.1.5",
+    "electron-packager": "^15.1.0"
   }
 }
