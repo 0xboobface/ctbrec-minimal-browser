@@ -62,21 +62,24 @@ function startBrowser () {
     height: 768,
     icon: app.getAppPath() + '/icon.png'
   });
-  mainWindow.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:82.0) Gecko/20100101 Firefox/82.0');
+  mainWindow.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36');
   mainWindow.setMenu(null);
   mainWindow.on('closed', () => {
     mainWindow = null
   });
   mainWindow.webContents.on('did-frame-finish-load', () => {
-    //mainWindow.openDevTools();
+    mainWindow.openDevTools();
     session.defaultSession.cookies.get({}, (error, cookies) => {
       let event = {
         'url': mainWindow.webContents.getURL(),
         'cookies': cookies
       }
+      process.stdout.write('trying to send message to ctbrec' + event);
       if(!remoteControlSocket.destroyed && !stopped) {
         remoteControlSocket.write(JSON.stringify(event))
         remoteControlSocket.write('\n')
+      } else {
+        console.log('socket not ready');
       }
     })
   })
