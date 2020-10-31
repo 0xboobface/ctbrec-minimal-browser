@@ -61,24 +61,30 @@ function startBrowser () {
     width: 1024,
     height: 768,
     icon: app.getAppPath() + '/icon.png'
-  })
-  mainWindow.setMenu(null)
+  });
+  mainWindow.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36');
+  mainWindow.setMenu(null);
   mainWindow.on('closed', () => {
     mainWindow = null
-  })
+  });
   mainWindow.webContents.on('did-frame-finish-load', () => {
-    session.defaultSession.cookies.get({}, (error, cookies) => {
-      let event = {
-        'url': mainWindow.webContents.getURL(),
-        'cookies': cookies
-      }
-      if(!remoteControlSocket.destroyed && !stopped) {
-        remoteControlSocket.write(JSON.stringify(event))
-        remoteControlSocket.write('\n')
-      }
-    })
+    //mainWindow.openDevTools();
+    session.defaultSession.cookies.get({})
+      .then((cookies) => {
+        let event = {
+          'url': mainWindow.webContents.getURL(),
+          'cookies': cookies
+        }
+        if(!remoteControlSocket.destroyed && !stopped) {
+          remoteControlSocket.write(JSON.stringify(event))
+          remoteControlSocket.write('\n')
+        } else {
+          console.log("########### socket not ready");
+        }
+      }).catch((error) => {
+        console.log(error)
+      })
   })
-  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
@@ -106,6 +112,6 @@ app.on('activate', function () {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    startBrowser()
+    startBrowser();
   }
 })
