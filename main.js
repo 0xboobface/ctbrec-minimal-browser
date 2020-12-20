@@ -31,6 +31,8 @@ function startBrowser() {
                     let args = msg.config;
                     let w = args.w != undefined ? args.w : 1024;
                     let h = args.h != undefined ? args.h : 768;
+                    let userAgent = args.userAgent != undefined ? args.userAgent : 'Mozilla/5.0 (X11; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0';
+                    mainWindow.webContents.setUserAgent(userAgent);
                     mainWindow.setSize(w, h);
                     if (args.proxy != undefined) {
                         proxySettings = args.proxy;
@@ -68,7 +70,6 @@ function startBrowser() {
         height: 768,
         icon: app.getAppPath() + '/icon.png'
     });
-    mainWindow.webContents.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36');
     mainWindow.setMenu(null);
     mainWindow.on('closed', () => {
         mainWindow = null
