@@ -9,7 +9,7 @@
   "author": "0xb00bface",
   "license": "GPL 3",
   "devDependencies": {
-    "electron": "^10.1.5",
+    "electron": "^10.2.0",
     "electron-packager": "^15.1.0"
   }
 }
