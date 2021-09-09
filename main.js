@@ -9,6 +9,15 @@ let remoteControlSocket
 let proxySettings
 var stopped = false;
 
+function sendBackToClient(line) {
+    if (!remoteControlSocket.destroyed && !stopped) {
+        remoteControlSocket.write(line);
+        remoteControlSocket.write('\n');
+    } else {
+        console.log("########### socket not ready");
+    }
+}
+
 function startBrowser() {
     let net = require('net');
     let server = net.createServer(function (socket) { //'connection' listener
@@ -40,7 +49,7 @@ function startBrowser() {
                         proxySettings = args.proxy;
                         let proxyConfig = { 'proxyRules': args.proxy.address };
                         mainWindow.webContents.session.setProxy(proxyConfig, () => {
-                            remoteControlSocket.write('Proxy settings configured\n');
+                            sendBackToClient('Proxy settings configured');
                             mainWindow.loadURL(args.url);
                         });
                     } else {
@@ -59,16 +68,14 @@ function startBrowser() {
                                     'msgid': msg.msgid,
                                     'result': result
                                 }
-                                remoteControlSocket.write(JSON.stringify(response));
-                                remoteControlSocket.write('\n');
+                                sendBackToClient(JSON.stringify(response));
                             })
                             .catch((error) => {
                                 let response = {
                                     'msgid': msg.msgid,
                                     'error': error
                                 }
-                                remoteControlSocket.write(JSON.stringify(response));
-                                remoteControlSocket.write('\n');
+                                sendBackToClient(JSON.stringify(response));
                                 console.error("Error in script " + msg.msgid + ' ' + msg.execute);
                                 console.error(error);
                             });
@@ -98,13 +105,7 @@ function startBrowser() {
                     'url': mainWindow.webContents.getURL(),
                     'cookies': cookies
                 }
-                if (!remoteControlSocket.destroyed && !stopped) {
-                    remoteControlSocket.write(JSON.stringify(event));
-                    remoteControlSocket.write('\n');
-                    //console.log("Message sent to ctbrec", event);
-                } else {
-                    console.log("########### socket not ready");
-                }
+                sendBackToClient(JSON.stringify(event));
             }).catch((error) => {
                 console.log(error)
             });
@@ -121,7 +122,7 @@ app.on('ready', startBrowser)
 
 app.on('login', function (event, webContents, request, authInfo, callback) {
     if (authInfo.isProxy) {
-        remoteControlSocket.write('Authentication requested by proxy\n');
+        sendBackToClient('Authentication requested by proxy');
         callback(proxySettings.user, proxySettings.password);
     }
 })
